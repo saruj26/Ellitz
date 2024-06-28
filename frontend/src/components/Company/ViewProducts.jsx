@@ -1,27 +1,36 @@
+
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {FaTrash,FaEdit } from 'react-icons/fa';
+import { FaTrash, FaEdit } from 'react-icons/fa';
 import axios from 'axios';
 
 const ViewProducts = () => {
-  const [products, setProducts] = useState([
-    { id: 1, name: 'Biscuit', price: 100, image: 'biscuit.jpg' },
-    { id: 2, name: 'Sunlight', price: 200, image: 'sunlight.jpg' },
-
-  ]);
+  const [products, setProducts] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    axios.get('http://localhost/api/view_products.php')
-      .then(response => setProducts(response.data))
-      .catch(error => console.error('Error fetching products:', error));
+    axios.get('http://localhost/Project-01/Project-1/backend/Company/view_product.php')
+      .then(response => {
+        if (Array.isArray(response.data)) {
+          setProducts(response.data);
+        } else {
+          setError('Invalid response format');
+          console.error('Invalid response format:', response.data);
+        }
+      })
+      .catch(error => {
+        setError('Error fetching products');
+        console.error('Error fetching products:', error);
+      });
   }, []);
 
-  const handleDelete = (id) => {
+  const handleDelete = (product_id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      axios.get(`http://localhost/api/delete_product.php?delete=${id}`)
+      axios.get(`http://localhost/Project-01/Project-1/backend/Company/delete_product.php?delete=${product_id}`)
         .then(response => {
           if (response.data.success) {
-            setProducts(products.filter(product => product.id !== id));
+            setProducts(products.filter(product => product.product_id !== product_id));
           } else {
             console.error('Error deleting product:', response.data.error);
           }
@@ -30,30 +39,38 @@ const ViewProducts = () => {
     }
   };
 
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
   return (
-    <div className="container">
+    <div className="maincontainer">
       <section className="display_product">
         {products.length > 0 ? (
           <table>
             <thead>
               <tr>
                 <th>S No</th>
-                <th>Product Image</th>
-                <th>Product Name</th>
-                <th>Product Price</th>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Netweight</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {products.map((product, index) => (
-                <tr key={product.id}>
+                <tr key={product.product_id}>
                   <td>{index + 1}</td>
-                  <td><img src={`http://localhost/images/${product.image}`} alt={product.name} /></td>
-                  <td>{product.name}</td>
-                  <td>{product.price}</td>
+                  <td><img src={`http://localhost/Project-01/Project-1/images/${product.product_image}`} alt={product.product_name} /></td>
+                  <td>{product.product_name}</td>
+                  <td>{product.product_price}</td>
+                  <td>{product.product_quantity}</td>
+                  <td>{product.product_netweight}</td>
                   <td>
-                    <button className="delete_product_btn" onClick={() => handleDelete(product.id)}><FaTrash/></button>
-                    <Link className="update_product_btn" to={`/update/${product.id}`}><FaEdit /></Link>
+                    <button className="delete_product_btn" onClick={() => handleDelete(product.product_id)}><FaTrash/></button>
+                    <Link className="update_product_btn" to={`/update/${product.product_id}`}><FaEdit /></Link>
                   </td>
                 </tr>
               ))}
